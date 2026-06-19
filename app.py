@@ -457,6 +457,8 @@ with tab2:
             st.caption("*(未完成定義：窗邊長籃內無藥品，且藥品狀態未開立)*")
             st.checkbox("2️⃣ 於輕安居籃內拿取藥袋調劑，並以『總包給藥』")
             st.checkbox("3️⃣ 調劑、審核、核發皆完成後，收處方箋並留『電子交班單』")
+
+
 # ==========================================
 # 分頁 3：ADC 特殊狀況處理流程 
 # ==========================================
@@ -605,73 +607,3 @@ with tab3:
                 st.checkbox("確認由單位人員親自領走藥品")
                 st.checkbox("請單位以盤點方式入 ADC，並到 HIS5 進行簽收")
                 st.caption("*(後續由藥庫上班日重新評估增量)*")
-                # ==========================================
-# 分頁 4：一般異常處理 (🔥 新增內容)
-# ==========================================
-with tab4:
-    st.header("⚠️ 主題 4：一般異常處理流程")
-    st.caption("針對藥品短缺、單據異常之標準處置")
-
-    # 第一層：事件分流
-    general_issue = st.radio(
-        "🚨 發生了什麼異常事件？",
-        ["請選擇...", "💊 缺藥 (線上/UD 找不到藥)", "📄 藥袋/藥包異常 (破損、印錯、資訊誤)"],
-        horizontal=True
-    )
-
-    st.divider()
-
-    if general_issue != "請選擇...":
-        # 第二層：時段分流
-        shift_type = st.radio(
-            "🕒 請問目前的時段是？",
-            ["🌞 平日", "🌙 值班時段 (夜間/假日)"],
-            horizontal=True
-        )
-        st.divider()
-
-        # --- 邏輯 A：缺藥處理 ---
-        if "💊 缺藥" in general_issue:
-            if shift_type == "🌞 平日":
-                st.info("💡 **平日缺藥處置：**")
-                st.checkbox("1. 再次確認：線上櫃與 UD 藥車確實皆無藥品")
-                st.checkbox("2. 🗣️ 立即告知【線上主管】協調處理")
-                st.success("✅ 已通報主管，等待後續指示。")
-            
-            else:  # 值班時段
-                st.error("🚨 **值班缺藥處置：需自行至藥庫取藥**")
-                
-                with st.expander("🔍 如何查詢母庫儲位？", expanded=True):
-                    st.markdown("🌐 請開啟：**網頁版藥典** 查詢該藥品之母庫位置。")
-                
-                st.checkbox("1. 依查詢結果，前往【藥庫】拿取藥品")
-                
-                st.markdown("#### ✍️ 帳務處理防呆 (重要！)")
-                st.checkbox("2. 填寫【實體帳卡】(騰寫取藥數量、日期)")
-                st.checkbox("3. 將帳卡放置於【庫管理員桌上】或【待作帳盒子】")
-                st.warning("⚠️ 提醒：藥庫將於週一上班日統一執行系統作帳作業。")
-                st.checkbox("4. ✍️ 於電子交班單留下紀錄")
-
-        # --- 邏輯 B：藥袋/藥包異常 ---
-        elif "📄 藥袋/藥包異常" in general_issue:
-            if shift_type == "🌞 平日":
-                st.info("💡 **平日單據異常處置：**")
-                st.checkbox("1. 🗣️ 立即告知【線上主管】確認異常原因")
-                st.success("✅ 主管已介入處理。")
-            
-            else:  # 值班時段
-                st.error("🚨 **值班單據異常處置：補印與通報**")
-                
-                col_fix1, col_fix2 = st.columns(2)
-                with col_fix1:
-                    st.checkbox("1. 執行【補印藥袋】")
-                with col_fix2:
-                    st.checkbox("2. 執行【補印藥包】")
-                
-                st.divider()
-                st.markdown("#### 📞 異常通報與存證")
-                st.checkbox("3. 撥打電話給當日 **On-call 主管**")
-                st.checkbox("4. **留取該筆異常之【處方箋】或【總張】** (作為查核憑據)")
-                st.checkbox("5. ✍️ 確實於交班紀錄中詳述異常狀況")
-                st.success("🎉 已完成緊急處置與紀錄。")
-
