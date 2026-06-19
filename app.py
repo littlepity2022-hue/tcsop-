@@ -125,10 +125,10 @@ with tab4:
     st.caption("針對缺藥、藥袋/藥包異常等突發狀況之處置")
 
     # 第一層：選擇異常事件
-    abnormal_event = st.radio(
+abnormal_event = st.radio(
         "🚨 發生了什麼異常事件？",
-        ["請選擇...", "💊 缺藥 (線上/UD 找不到藥)", "📄 藥袋或藥包異常 (破損/印錯/內容誤)"],
-        horizontal=True
+        ["請選擇...", "💊 缺藥 (線上/UD 找不到藥)", "📄 藥袋或藥包異常 (破損/印錯/內容誤)", "💊 藥包機異常 (大小寶當機/落藥補包)"],
+        horizontal=True, key="main_task_4"
     )
 
     st.divider()
@@ -173,7 +173,54 @@ with tab4:
                 st.checkbox("3. 📞 電聯當日 **On call 主管**")
                 st.checkbox("4. 📄 留取該筆**異常處方箋或總張** (查核存證用)")
                 st.checkbox("5. ✍️ 確實記錄於**電子交班單**，落實交班")
+# --- 邏輯 C：藥包機故障 (大小寶) ---
+        elif "💊 藥包機異常" in abnormal_event:
+            st.subheader("🤖 TOSHO 藥包機異常處理處置")
+            
+            machine_issue = st.radio(
+                "🔍 發生什麼具體狀況？",
+                ["請選擇...", "💥 當機 (顯示亂碼/需切換機台)", "⚠️ 落藥 (藥品掉落/需補包)"],
+                horizontal=True, key="machine_sub_task"
+            )
+            
+            st.divider()
 
+            if machine_issue == "💥 當機 (顯示亂碼/需切換機台)":
+                st.error("🚨 **第一動作：切換至另一台藥包機運作**")
+                
+                with st.expander("🖥️ TOSHO 系統切換步驟 (大寶轉小寶)", expanded=True):
+                    st.markdown("""
+                    **1. 前往接收系統** ➔ 點選 **[停止接收]** (極重要！)
+                    **2. 進入參數設定** ➔ 點選 **[資料接收]**
+                    **3. 修改機台代碼：**
+                       * 將 **[門診]、[首日出院]、[急診]** 的數值從 **1** 改為 **2** (1:大寶, 2:小寶)
+                    **4. 存檔** ➔ 點選 **[資料接收]** 重新開啟
+                    *※ 若系統恢復，反之將 2 改回 1 即可。*
+                    """)
+                
+                st.warning("🔄 **重啟當機機台 (開關位置)**")
+                col_p1, col_p2 = st.columns(2)
+                with col_p1:
+                    st.markdown("**🐘 大寶 (機台 1)**")
+                    st.caption("開關在【撕單區電腦下方櫃子】主機旁")
+                with col_p2:
+                    st.markdown("**🐕 小寶 (機台 2)**")
+                    st.caption("開關在【小寶顯示面板下方】")
+                
+                st.checkbox("已完成機台切換並嘗試重啟")
+
+            elif machine_issue == "⚠️ 落藥 (藥品掉落/需補包)":
+                st.info("💡 **落藥處理原則：清空 -> 檢查 -> 補包**")
+                st.checkbox("1. 立即將機器內掉落藥品清走")
+                st.checkbox("2. 檢查機器，試包至運作正常為止")
+                
+                st.markdown("#### 💻 系統補包操作路徑")
+                st.code("門急診作業 ➔ 作業停止 ➔ 領藥號查詢 ➔ 輸入號碼/床號 ➔ 點查詢 ➔ 點補包點選 ➔ 確定")
+                
+                st.warning("📝 **最後步驟**")
+                st.checkbox("已關閉畫面回到門急診作業 (點選[邊收邊包])")
+                st.checkbox("已完成填寫【補包登記表】")
+                st.success("🎉 補包作業完成")
 # 頁尾
 st.sidebar.info(f"📅 系統執行日：{datetime.date.today()}")
 st.sidebar.caption("⚡ 本系統僅供 SOP 快速核對使用，實際操作請依醫院規範為準。")
