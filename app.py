@@ -406,24 +406,149 @@ with tab2:
 # ==========================================
 with tab3:
     st.header("🚨 主題 3：ADC 特殊狀況處理流程")
+    st.caption("依照異常類型進行分流防呆處置")
+
+    # 第一層防呆：判斷 ADC 異常類型
     adc_issue_type = st.radio(
         "🔍 請問您目前遇到什麼類型的 ADC 異常？",
-        ["請選擇...", "🛠️ (1) 操作問題", "💻 (2) 資訊異常", "📦 (3) 庫存量不一致", "💥 (4) 當機/無法給藥", "📉 (5) 庫存不足"],
-        horizontal=False, key="tab3_task"
+        [
+            "請選擇...",
+            "🛠️ (1) 操作上問題 (醫囑取藥/盤點等操作相關)",
+            "💻 (2) 資訊異常 (醫囑後已審核，但正常流程無法開櫃)",
+            "📦 (3) 庫存量不一致 (實際庫存與電腦畫面不符)",
+            "💥 (4) ADC 當機或無法審核 (導致無法給藥)",
+            "📉 (5) ADC 內藥品庫存不足" 
+        ],
+        horizontal=False
     )
+
     st.divider()
-    if adc_issue_type == "📦 (3) 庫存量不一致":
-        st.checkbox("✅ 已依照【實際庫存量】重新輸入更新數量")
-        adc_time_shift = st.radio("🕒 請問時段？", ["平日白天", "值班時段"])
-        if adc_time_shift == "平日白天": st.success("🗣️ 告知【線上主管】即可。")
-        else: st.error("🚨 告知【on call 主管】並填寫【交班紀錄單】。")
-    elif adc_issue_type == "💥 (4) 當機/無法給藥":
-        adc_location = st.radio("📍 發生站點：", ["🚑 急診 ADC", "🏥 住院 ADC"])
+
+    # 情境 1：操作問題
+    if adc_issue_type == "🛠️ (1) 操作上問題 (醫囑取藥/盤點等操作相關)":
+        st.subheader("🛠️ ADC 操作問題處置")
+        st.info("💡 處置方式：請先查閱操作手冊，若無法解決請連繫主管。")
+        st.checkbox("✅ 已查閱操作手冊或連繫自己的主管")
+
+    # 情境 2：資訊系統異常
+    elif adc_issue_type == "💻 (2) 資訊異常 (醫囑後已審核，但正常流程無法開櫃)":
+        st.subheader("💻 ADC 資訊系統異常處置")
+        st.warning("⚠️ 處置方式：硬體/系統層級異常，無法自行排除。")
+        st.checkbox("📞 立即請護理站/現場人員聯繫【資訊護理師】處理")
+
+    # 情境 3：庫存不一致
+    elif adc_issue_type == "📦 (3) 庫存量不一致 (實際庫存與電腦畫面不符)":
+        st.subheader("📦 ADC 庫存量不一致處置")
+        
+        st.markdown("#### 第一步：系統校正")
+        st.checkbox("✅ 已依照【實際庫存量】重新輸入並更新電腦數量")
+        
+        st.markdown("#### 第二步：主管通報 (依時段)")
+        adc_time_shift = st.radio("🕒 請問目前的時段是？", ["請選擇...", "🌞 平日白天", "🌙 值班時段 (夜間/假日)"], horizontal=True)
+        
+        if adc_time_shift == "🌞 平日白天":
+            st.success("🗣️ 平日處置：請告知【線上主管】即可。")
+            st.checkbox("✅ 已告知線上主管")
+        elif adc_time_shift == "🌙 值班時段 (夜間/假日)":
+            st.error("🚨 值班時段處置：需通報並留下交班紀錄！")
+            st.checkbox("🗣️ 已告知【on call 主管】")
+            st.checkbox("✍️ 已填寫【交班紀錄單】")
+
+    # 情境 4：大當機 / 無法給藥
+    elif adc_issue_type == "💥 (4) ADC 當機或無法審核 (導致無法給藥)":
+        st.subheader("💥 ADC 異常 / 藥局無法審核給藥處置")
+        
+        adc_location = st.radio(
+            "📍 請問發生當機/異常的 ADC 站點是？",
+            ["請選擇...", "🚑 急診 ADC", "🏥 住院 ADC"],
+            horizontal=True
+        )
+
         if adc_location == "🚑 急診 ADC":
-            st.error("🚨 請急診人員用【專用手寫處方箋】來取藥，藥師手寫藥袋")
-        else:
-            st.warning("⚠️ 請護理站填寫【藥品處理單】來取藥，藥師手寫藥袋")
-    # ... 其餘內容保持一致
+            st.error("🚨 【急診 ADC 異常】(平日與值班時段皆適用此流程)")
+            st.checkbox("1️⃣ 【立即告知】急診人員")
+            st.checkbox("2️⃣ 請急診人員用 **【專用手寫處方箋】** 來藥局取藥")
+            
+            with st.expander("👀 點此展開：急診 ADC 專用手寫處方箋 常見品項參考", expanded=False):
+                st.markdown("""
+                *包含但不限於以下緊急用藥，詳見實體表單：*
+                - Alteplase 50mg/vial
+                - Ketorolac 30mg/amp
+                - Tramadol 100mg/2ml (管4)
+                - Fentanyl 針劑 (大/小)
+                - Morphine 針劑
+                - Propofol 200mg/20ml (管4)
+                - Midazolam 5mg/1ml (管4)
+                - Diazepam 10mg/2ml (管4)
+                """)
+            
+            st.checkbox("3️⃣ 藥師手寫藥袋")
+            
+            st.markdown("#### 通報流程")
+            er_shift = st.radio("請問目前時段？", ["平日白天", "值班時段 (夜間/假日)"], horizontal=True)
+            if er_shift == "平日白天":
+                st.checkbox("🗣️ 已告知【線上主管】")
+            else:
+                st.checkbox("🗣️ 已告知【on call 主管】")
+                st.checkbox("✍️ 已填寫【交班紀錄單】")
+
+        elif adc_location == "🏥 住院 ADC":
+            st.warning("⚠️ 【住院 ADC 異常】")
+            ip_shift = st.radio("請問目前時段？", ["請選擇...", "🌞 平日白天", "🌙 值班時段 (夜間/假日)"], horizontal=True)
+            
+            if ip_shift == "🌞 平日白天":
+                st.info("💡 註：住院平日日時段異常 ➔ 請先告知【線上主管】處理。")
+                st.checkbox("✅ 已告知線上主管")
+                
+            elif ip_shift == "🌙 值班時段 (夜間/假日)":
+                st.error("🚨 住院值班時段緊急取藥流程：")
+                st.checkbox("1️⃣ 【告知】護理站相關人員")
+                st.checkbox("2️⃣ 請護理站填寫 **【藥品處理單】** 來藥局取藥")
+                st.caption("*(注意：急診是用手寫處方箋，住院是用藥品處理單)*")
+                st.checkbox("3️⃣ 藥師手寫藥袋")
+                st.checkbox("🗣️ 4️⃣ 告知【on call 主管】")
+                st.checkbox("✍️ 5️⃣ 填寫【交班紀錄單】")
+
+    # 情境 5：ADC 內藥品庫存不足
+    elif adc_issue_type == "📉 (5) ADC 內藥品庫存不足":
+        st.subheader("📉 ADC 內藥品庫存不足處置流程")
+        
+        out_of_stock_shift = st.radio(
+            "🕒 請問目前的時段是？",
+            ["請選擇...", "🌞 平日白天", "🌙 假日 / 夜間 / 春節值班時段"],
+            horizontal=True
+        )
+
+        if out_of_stock_shift == "🌞 平日白天":
+            st.success("📞 平日處理非常簡單：直接【電聯藥庫】處理即可！")
+            st.checkbox("✅ 已電聯通知藥庫補藥")
+
+        elif out_of_stock_shift == "🌙 假日 / 夜間 / 春節值班時段":
+            st.warning("⚠️ 注意核心原則：填寫交接班紀錄單，**【無須】**打給 oncall 主管詢問！")
+            st.checkbox("✍️ 已確認填寫交接班紀錄單")
+            st.divider()
+
+            med_class = st.radio(
+                "💊 請問不足的藥品是哪一類？",
+                ["請選擇...", "📦 一般藥品", "💉 管藥 (針劑)"],
+                horizontal=True
+            )
+
+            if med_class == "📦 一般藥品":
+                st.info("💡 流程：單位填單 ➔ 急診發藥 ➔ 單位盤入ADC ➔ 留單交班給藥庫")
+                st.checkbox("請單位填寫【藥品處理單】給急診藥局 (原因請寫：ADC 藥品不足量)")
+                st.checkbox("急診藥局進行發藥")
+                st.checkbox("請單位以盤點方式入 ADC")
+                st.checkbox("將「藥品處理單藥局聯」放置於【交班文件夾】中 (藥庫上班日會重新評估)")
+
+            elif med_class == "💉 管藥 (針劑)":
+                st.info("💡 流程：走換發流程 ➔ 急診發藥 (限單位領取) ➔ 單位盤入ADC")
+                st.checkbox("請單位送出申請量與病人使用紀錄，並將【空瓶】送回急診藥局")
+                st.checkbox("急診藥局於 ADC 調劑換發，空瓶確認無誤後可直接丟棄")
+                st.error("🚨 【強制防呆】須由【單位人員】親自到急診藥局領藥，**不可由傳送領取**！")
+                st.checkbox("確認由單位人員親自領走藥品")
+                st.checkbox("請單位以盤點方式入 ADC，並到 HIS5 進行簽收")
+                st.caption("*(後續由藥庫上班日重新評估增量)*")
 # ==========================================
 # 分頁 4：一般異常處理 (含藥包機切換邏輯)
 # ==========================================
