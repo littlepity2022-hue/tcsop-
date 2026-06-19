@@ -2,10 +2,10 @@ import streamlit as st
 import datetime
 
 # 1. 設定網頁標題與寬度
-st.set_page_config(page_title="SOP 智能核對系統", page_icon="📋", layout="centered")
+st.set_page_config(page_title="SOP核對系統", page_icon="📋", layout="centered")
 
-st.title("⚡ 極速 SOP 智能核對系統")
-st.caption("把複雜的長篇大論，變成 5 秒內能完成的互動防呆表單")
+
+st.caption("互動防呆表單")
 
 # 2. 建立分頁 (已擴充為 4 個 Tab)
 tab1, tab2, tab3, tab4 = st.tabs([
