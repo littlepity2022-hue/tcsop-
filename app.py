@@ -649,7 +649,7 @@ with tab4:
             
         elif print_cate == "🛌 住院首日量":
             st.info("**系統路徑：** 住院工作清單 ➔ 輸入床號")
-            st.markdown("**報表名稱：** `住院ON-LINE藥袋(大)-台中版-多發一袋`")
+            st.markdown("**報表名稱：** `住院ON-LINE藥袋(大)-台中版-多藥一袋`")
             
         elif print_cate == "🚨 管藥使用紀錄表 (Fentanyl 貼片等)":
             st.warning("⚠️ 平日時段請洽【線上主管】；值班時段若無自動列印才執行補印。")
