@@ -7,13 +7,13 @@ st.set_page_config(page_title="SOP 智能核對系統", page_icon="📋", layout
 st.title("⚡ 極速 SOP 智能核對系統")
 st.caption("把複雜的長篇大論，變成 5 秒內能完成的互動防呆表單")
 
-# 2. 建立分頁 (新增了 ADC 異常處理，調整為 6 個 Tab)
+# 2. 建立分頁
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "1️⃣ 首日量", 
     "2️⃣ 核發", 
     "🏠 3️⃣ HAH", 
     "🏢 4️⃣ 輕安居", 
-    "🚨 5️⃣ ADC 異常", # <--- 新增大主題
+    "🚨 5️⃣ ADC 異常", 
     "📝 貼新 SOP"
 ])
 
@@ -195,33 +195,264 @@ with tab2:
             st.info("♻️ 備註：報廢量不須送回藥局銷毀，由原單位直接銷毀。補藥由補藥藥師依核發量收回空瓶。")
 
     elif dispense_type == "💉 Home TPN":
-        # ... (略, 與之前相同)
-        pass
+        st.subheader("💉 Home TPN 門診處方核發")
+        st.error("🚨 **【極重要限制】請務必確認：必須至【急診藥局】領取；且限【星期一、三、五 下午 2:00 後】**")
+        tpn_step1 = st.checkbox("確認目前時間與地點符合上述規定")
+        tpn_step2 = st.checkbox("請病人出示紙本【居家 TPN 領取紀錄表】")
+        if tpn_step1 and tpn_step2:
+            st.checkbox("核對處方內容：日期、乘載數量是否吻合")
+            tpn_step4 = st.checkbox("🖊️ 藥師親自於紀錄表上【蓋章】")
+            if tpn_step4:
+                st.success("🎉 核對無誤，可將 Home TPN 交予病人。")
+
+    elif dispense_type == "🩸 骨髓捐贈藥品":
+        st.subheader("🩸 骨髓捐贈藥品核發")
+        st.info("💡 **事前準備位置：** 藥品已由藥庫提前放置於【首日量單門冰箱】 (內含：好幾天份藥 + 綠聯 + 白聯)")
+        st.markdown("#### ✅ 病人來領 Checklist")
+        st.checkbox("❄️ 【註2】確認給藥時是否需附帶【冰桶】")
+        st.checkbox("📅 【步驟 b】僅給予【當日藥品】(務必核對編碼與日期！)")
+        st.checkbox("✍️ 【步驟 a】綠聯、白聯：【發藥藥師】與【領受人】皆已簽名")
+        st.divider()
+        dose_status = st.radio("請問此劑為最後一劑嗎？", ["請選擇...", "➡️ 否，病人後續還需續領", "🛑 是，此為最後一劑"], horizontal=True)
+        if dose_status == "➡️ 否，病人後續還需續領":
+            st.success("✅ 【步驟 c】請將【綠聯】歸還給病人帶回續用。")
+            st.checkbox("已將綠聯歸還病人")
+        elif dose_status == "🛑 是，此為最後一劑":
+            st.warning("⚠️ 【註1】最後一劑特殊處理：")
+            st.checkbox("將綠、白 2 聯【皆收下】不退還")
+            st.checkbox("將 2 聯交給【線上主管】(若為值班時段，則放置於交班資料夾)")
+
+    elif dispense_type == "⚕️ Thyrogen":
+        st.subheader("⚕️ Thyrogen 處理流程")
+        thyrogen_task = st.radio("🎯 請問您目前要執行哪項任務？", ["請選擇...", "🛠️ 前期：藥品調劑與準備", "📦 後期：急診藥局核發(領藥)"], horizontal=True)
+        if thyrogen_task == "🛠️ 前期：藥品調劑與準備":
+            st.markdown("#### 1️⃣ 調劑準備 Checklist")
+            pt_type = st.radio("請問是哪種處方？", ["請選擇...", "🏥 住院處方", "🏥 門診處方"], horizontal=True)
+            if pt_type == "🏥 住院處方":
+                st.info("💡 住院處理原則")
+                st.checkbox("首日量藥袋請【直接調劑】(直接從藥庫拿)")
+                st.checkbox("首日量直接上病房")
+            elif pt_type == "🏥 門診處方":
+                st.info("💡 門診處理原則 (有交接動作)")
+                st.checkbox("專用藥師依照藥袋調劑")
+                st.checkbox("調劑完畢後，交給【主管】")
+                st.success("✅ 後續由主管統一放置於【首日量單門冰箱】")
+        elif thyrogen_task == "📦 後期：急診藥局核發(領藥)":
+            st.markdown("#### 2️⃣ 急診核發 Checklist")
+            st.info("🔄 給藥原則：比照骨捐流程，單次給藥。")
+            st.checkbox("確認核醫科人員已出示【病患注射卡】")
+            st.checkbox("至【首日量單門冰箱】拿取已備好之 Thyrogen 藥袋")
+            with st.expander("🚨 異常狀況處理：當下未找到該病患藥袋？", expanded=False):
+                st.warning("遇到找不到病患藥袋時，請值班藥師執行以下動作：")
+                st.checkbox("✍️ 值班藥師【手寫藥袋】給藥")
+                st.checkbox("💻 後續於【電子交班單】交班給藥庫")
+
+    elif dispense_type == "👶 嬰兒室公費疫苗/血液製劑":
+        st.subheader("👶 住院24小時內新生兒施打 (公費) 疫苗/血液製劑")
+        st.error("🚨 **【地點限定】本流程僅限至【急診藥局】請領！**")
+        with st.expander("ℹ️ 點此查看：目前開放請領之兩項品項", expanded=False):
+            st.markdown("1. **(疫苗)** Hepatitis B Vaccine 10mcg `[冷藏][公費]`\n2. **(血液製劑)** Hepatitis B Immune Globulin 100IU `[冷藏][公費]`")
+        st.divider()
+        st.warning("⚠️ **【冷鏈防呆限制】** 請務必等傳送將專用冰桶拿來後，再開始後續動作！")
+        cooler_arrived = st.checkbox("✅ 傳送已將【專用冰桶】與【請領單】送達藥局")
+        if cooler_arrived:
+            st.markdown("#### 1️⃣ 內容物核對")
+            col_v1, col_v2 = st.columns(2)
+            with col_v1:
+                st.checkbox("冰桶內：溫度計、監視卡、冰寶、查檢表")
+            with col_v2:
+                st.checkbox("請領單：名字床號、蓋章、領取量")
+            st.divider()
+            st.markdown("#### 2️⃣ 調劑與單據處理")
+            st.checkbox("✍️ 依照藥袋調劑，並於【帳卡】寫上床號")
+            st.checkbox("📝 於比對欄位填寫『公費』")
+            slip_handled = st.radio("是否已正確分拆請領單？", ["尚未處理...", "✅ 將上聯留著夾冰箱旁，下聯還給傳送"], horizontal=False)
+            if slip_handled == "✅ 將上聯留著夾冰箱旁，下聯還給傳送":
+                st.checkbox("🎉 完成首日量核對")
+
+    elif dispense_type == "🏠 門診居家照護(管制針劑)":
+        st.subheader("🏠 門診居家照護管制藥針劑流程")
+        role = st.radio("🧑‍⚕️ 請問您目前是哪一站的藥師？", ["請選擇...", "👁️ 核對藥師", "💊 門診發藥藥師", "🚑 急診發藥藥師"], horizontal=True)
+        st.divider()
+        if role == "👁️ 核對藥師":
+            st.error("🚨 **【強制防呆】管 1 - 管 4 針劑先【不調劑】！**")
+            st.markdown("#### ✅ 您的專屬任務：")
+            st.checkbox("將其他藥品核對完畢")
+            st.checkbox("將【空藥袋】一併夾好送出")
+            st.success("✅ 核對藥師任務結束。")
+        elif role == "💊 門診發藥藥師":
+            st.info("💡 居家護理師後續會去急診藥局領針劑，門診只需處理以下事項：")
+            st.markdown("#### ✅ 您的專屬任務：")
+            st.checkbox("發給病人『其他藥品』")
+            st.checkbox("將【管箋】及【空藥袋】交給『調一藥師』")
+            st.markdown("#### ⚠️ 特殊狀況檢查")
+            mix_rx = st.radio("管箋上是否『同時有口服跟針劑』？", ["請確認...", "🟢 否，純針劑", "🔴 是，有口服也有針劑"], horizontal=True)
+            if mix_rx == "🔴 是，有口服也有針劑":
+                st.warning("⚠️ 記得在管箋上【備註口服是誰發的】！")
+                st.checkbox("已備註口服發藥藥師")
+        elif role == "🚑 急診發藥藥師":
+            st.markdown("#### ✅ 您的專屬任務：分為領藥當下與回收空瓶")
+            er_task = st.radio("目前進度是？", ["請選擇...", "📦 護理師正要領藥", "♻️ 護理師拿空瓶來回收 (需結案)"], horizontal=True)
+            if er_task == "📦 護理師正要領藥":
+                st.checkbox("✍️ 核發時，填寫【追蹤本子】")
+                st.success("護理給藥紀錄會由系統直接帶入，當下處理完成！")
+            elif er_task == "♻️ 護理師拿空瓶來回收 (需結案)":
+                st.markdown("**💻 回收空瓶需操作系統【管藥結案】：**")
+                with st.expander("👉 點此查看系統結案操作步驟", expanded=True):
+                    st.markdown("1. 進入路徑：`特殊藥品系統` ➔ `特殊藥品系統-管藥結案`\n2. 篩選條件設定為：**[已結案] = [否]**\n3. 勾選欲結案之品項，點擊上方【結案】按鈕。")
+                st.checkbox("✅ 已完成系統管藥結案")
+                st.checkbox("✅ 將此紀錄交班給【藥庫】")
+
+    elif dispense_type == "🚑 急診發藥注意事項":
+        st.subheader("🚑 急診發藥注意事項")
+        er_pt_status = st.radio("請選擇急診病人狀態：", ["請選擇...", "🛏️ 急診在院", "🚶 急診出院"], horizontal=True)
+        if er_pt_status == "🛏️ 急診在院":
+            st.info("💡 流程：調劑 ➔ 審核 ➔ 傳送領取")
+            st.checkbox("完成調劑")
+            st.checkbox("完成審核")
+            st.checkbox("交由傳送領取")
+        elif er_pt_status == "🚶 急診出院":
+            st.info("💡 流程：比照【門診發藥模式】")
+        st.divider()
+        st.error("🚨 **【重大異常防呆：漏發部份品項】**")
+        st.write("注意：急診病人處方易頻繁修改。發藥藥師務必查看系統【有效處方明細】，確認各處方是否標示『已發藥』！")
 
 # ==========================================
 # 分頁 3：HAH 居家在宅醫療
 # ==========================================
 with tab3:
     st.header("🏠 HAH 居家在宅醫療：二院區 B1 領藥")
-    # ... (略, 與之前相同)
-    pass
+    
+    # 區分時間段（核心防呆）
+    opd_time = st.radio(
+        "🕒 請確認當前時段：",
+        ["平日正常門診 (09:00 - 21:00)", "週六半日/週日/國定假日 (含停診時段)"],
+        horizontal=True
+    )
+
+    st.divider()
+
+    if opd_time == "平日正常門診 (09:00 - 21:00)":
+        st.subheader("📦 處理方式：一院區轉送二院區")
+        st.info("💡 流程重點：第一院區主管派人送藥 ➔ 二院區中藥局核發")
+        
+        st.checkbox("1. 確認一院區傳送已將藥品送達二院區")
+        st.checkbox("2. 點收完畢，將藥品放置於【HAH 居家在宅醫療專用藥盒】內")
+        
+        st.markdown("#### 🚪 領藥窗口分配 (B1 窗口)")
+        # 顯示當前時間參考
+        now_time = datetime.datetime.now().time()
+        st.write(f"🕘 目前系統時間：{now_time.strftime('%H:%M')}")
+
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.warning("🌅 白班 (12:30前)")
+            st.checkbox("至 **A4 窗口** 發藥")
+        with col_b:
+            st.warning("⛅ 白班 (12:30後)")
+            st.checkbox("至 **D8 窗口** 發藥")
+        with col_c:
+            st.warning("🌃 夜班 (13:30-22:00)")
+            st.checkbox("至 **E 窗口** 發藥")
+
+    else:
+        st.subheader("🚑 假日/停診處理：急診藥局窗口")
+        st.error("🚨 注意：此時段統一由『急診藥局』辦理核發！")
+        
+        st.checkbox("1. 單位人員需憑【處方箋】至急診藥局領藥")
+        
+        with st.expander("🏃‍♂️ 急診發藥藥師操作指南", expanded=True):
+            st.markdown("""
+            * **步驟 A：** 依照處方箋號碼，前往【門診區】拿取藥品。
+            * **步驟 B：** 執行核發作業 (比照一般門診發藥流程)。
+            * **步驟 C：** 核發完成需在【處方箋】上蓋章。
+            """)
+        
+        st.checkbox("2. 將【處方箋】&【總張】放入『急診交班透明夾』")
+        st.success("✅ 完成假日/夜間核發交班作業")
+
+    st.divider()
+    st.caption("❓ 若有任何疑問，請立即詢問【線上主管】")
 
 # ==========================================
 # 分頁 4：輕安居作業
 # ==========================================
 with tab4:
     st.header("🏢 主題 4：輕安居作業 SOP")
-    # ... (略, 與之前相同)
-    pass
+    st.caption("依照平假日原則、處方類型與站點角色進行防呆核對")
+
+    # 1. 第一層防呆：平假日判斷
+    day_type = st.radio(
+        "📅 請問今天是平日還是假日？", 
+        ["請選擇...", "🌞 平日", "🎉 週六/國定假日", "🚨 假日/無門診 (值班急領)"], 
+        horizontal=True
+    )
+
+    st.divider()
+
+    if day_type == "🌞 平日":
+        st.subheader("📝 輕安居 - 平日列印與作業原則")
+        
+        # 2. 第二層防呆：有無針劑判斷
+        med_type = st.radio("💉 處方是否包含針劑？", ["請選擇...", "包含針劑", "無針劑 (下午餐包作業)"], horizontal=True)
+
+        if med_type == "包含針劑":
+            st.info("💡 【含針劑】處方處理原則")
+            st.checkbox("由『門診調劑藥師』負責調劑 (總包)")
+            st.checkbox("病人領藥後，請引導至『注射室』給藥")
+
+        elif med_type == "無針劑 (下午餐包作業)":
+            st.info("💡 【無針劑】下午餐包流程：NH7 調劑 ➔ NH4 審核 ➔ F1 核發 ➔ 傳送至二院區")
+            
+            # 3. 站點角色選擇
+            role_task = st.selectbox(
+                "👩‍⚕️ 您目前負責的崗位是？", 
+                ["請選擇...", "1️⃣ 調劑 (輕安居7)", "2️⃣ 書記", "3️⃣ 審核 (輕安居4)", "4️⃣ 傳送 (DU4)", "5️⃣ 核發 (F1)"]
+            )
+
+            if role_task == "1️⃣ 調劑 (輕安居7)":
+                st.warning("⏰ 建議作業時間：11:30-13:00 / 13:30-16:30")
+                st.checkbox("負責調劑捲餐包")
+                st.checkbox("確認完成『16:00 前』之處方")
+            elif role_task == "2️⃣ 書記":
+                st.warning("⏰ 建議作業時間：12:00-13:00")
+                st.checkbox("執行書記轉餐包作業")
+            elif role_task == "3️⃣ 審核 (輕安居4)":
+                st.warning("⏰ 建議作業時間：13:30-17:30")
+                st.checkbox("審核當日『16:00 前』之處方")
+            elif role_task == "4️⃣ 傳送 (DU4)":
+                st.warning("⏰ 建議作業時間：14:00-15:00")
+                st.checkbox("傳送將藥車推至『急診藥局』 (DU4 & 13-22C)")
+                st.checkbox("急診藥師主動告知發藥藥師")
+            elif role_task == "5️⃣ 核發 (F1)":
+                st.warning("⏰ 建議作業時間：15:30-17:00")
+                st.checkbox("依照收付之處方箋給藥")
+                st.error("🚨 注意：總張勿撕！依照護理單位置於臺車上")
+                st.checkbox("未領之藥品：依照單位，分別置於『小寶後方輕安居籃』內")
+
+    elif day_type == "🎉 週六/國定假日":
+        st.subheader("📝 輕安居 - 週六/國定假日作業原則")
+        st.info("💡 流程重點：門診總包 ➔ 暫放 ➔ 傳送二院區")
+        st.checkbox("一律由『門診調劑藥師』負責調劑 (總包)")
+        st.checkbox("核對後，放置於『小寶旁輕安區藥品暫放籃』")
+        st.checkbox("注意：週六依然會進行核發 ➔ 傳送推至二院區")
+
+    elif day_type == "🚨 假日/無門診 (值班急領)":
+        st.subheader("🚑 假日(W6/W7)無門診時段：值班時段輕安局急領")
+        st.error("🚨 適用於值班時段的急領作業 SOP")
+        st.checkbox("1️⃣ 先查詢 HIS5 藥品狀態是否完成")
+        st.caption("*(未完成定義：窗邊長籃內無藥品，且藥品狀態未開立)*")
+        st.checkbox("2️⃣ 於輕安居籃內拿取藥袋調劑，並以『總包給藥』")
+        st.checkbox("3️⃣ 調劑、審核、核發皆完成後，收處方箋並留『電子交班單』")
 
 # ==========================================
-# 分頁 5：ADC 特殊狀況處理流程 (🔥🔥 本次新增大主題 🔥🔥)
+# 分頁 5：ADC 特殊狀況處理流程
 # ==========================================
 with tab5:
     st.header("🚨 主題 5：ADC 特殊狀況處理流程")
     st.caption("依照異常類型進行分流防呆處置")
 
-    # 第一層防呆：判斷 ADC 異常類型
+    # 第一層防呆：判斷 ADC 異常類型 (已新增 第(5)項 庫存不足)
     adc_issue_type = st.radio(
         "🔍 請問您目前遇到什麼類型的 ADC 異常？",
         [
@@ -229,7 +460,8 @@ with tab5:
             "🛠️ (1) 操作上問題 (醫囑取藥/盤點等操作相關)",
             "💻 (2) 資訊異常 (醫囑後已審核，但正常流程無法開櫃)",
             "📦 (3) 庫存量不一致 (實際庫存與電腦畫面不符)",
-            "💥 (4) ADC 當機或無法審核 (導致無法給藥)"
+            "💥 (4) ADC 當機或無法審核 (導致無法給藥)",
+            "📉 (5) ADC 內藥品庫存不足" # <--- 新增這裡
         ],
         horizontal=False
     )
@@ -266,7 +498,7 @@ with tab5:
             st.checkbox("🗣️ 已告知【on call 主管】")
             st.checkbox("✍️ 已填寫【交班紀錄單】")
 
-    # 情境 4：大當機 / 無法給藥 (最複雜的情境)
+    # 情境 4：大當機 / 無法給藥
     elif adc_issue_type == "💥 (4) ADC 當機或無法審核 (導致無法給藥)":
         st.subheader("💥 ADC 異常 / 藥局無法審核給藥處置")
         
@@ -320,6 +552,47 @@ with tab5:
                 st.checkbox("3️⃣ 藥師手寫藥袋")
                 st.checkbox("🗣️ 4️⃣ 告知【on call 主管】")
                 st.checkbox("✍️ 5️⃣ 填寫【交班紀錄單】")
+
+    # 情境 5：ADC 內藥品庫存不足 (🔥🔥 本次新增 🔥🔥)
+    elif adc_issue_type == "📉 (5) ADC 內藥品庫存不足":
+        st.subheader("📉 ADC 內藥品庫存不足處置流程")
+        
+        out_of_stock_shift = st.radio(
+            "🕒 請問目前的時段是？",
+            ["請選擇...", "🌞 平日白天", "🌙 假日 / 夜間 / 春節值班時段"],
+            horizontal=True
+        )
+
+        if out_of_stock_shift == "🌞 平日白天":
+            st.success("📞 平日處理非常簡單：直接【電聯藥庫】處理即可！")
+            st.checkbox("✅ 已電聯通知藥庫補藥")
+
+        elif out_of_stock_shift == "🌙 假日 / 夜間 / 春節值班時段":
+            st.warning("⚠️ 注意核心原則：填寫交接班紀錄單，**【無須】**打給 oncall 主管詢問！")
+            st.checkbox("✍️ 已確認填寫交接班紀錄單")
+            st.divider()
+
+            med_class = st.radio(
+                "💊 請問不足的藥品是哪一類？",
+                ["請選擇...", "📦 一般藥品", "💉 管藥 (針劑)"],
+                horizontal=True
+            )
+
+            if med_class == "📦 一般藥品":
+                st.info("💡 流程：單位填單 ➔ 急診發藥 ➔ 單位盤入ADC ➔ 留單交班給藥庫")
+                st.checkbox("請單位填寫【藥品處理單】給急診藥局 (原因請寫：ADC 藥品不足量)")
+                st.checkbox("急診藥局進行發藥")
+                st.checkbox("請單位以盤點方式入 ADC")
+                st.checkbox("將「藥品處理單藥局聯」放置於【交班文件夾】中 (藥庫上班日會重新評估)")
+
+            elif med_class == "💉 管藥 (針劑)":
+                st.info("💡 流程：走換發流程 ➔ 急診發藥 (限單位領取) ➔ 單位盤入ADC")
+                st.checkbox("請單位送出申請量與病人使用紀錄，並將【空瓶】送回急診藥局")
+                st.checkbox("急診藥局於 ADC 調劑換發，空瓶確認無誤後可直接丟棄")
+                st.error("🚨 【強制防呆】須由【單位人員】親自到急診藥局領藥，**不可由傳送領取**！")
+                st.checkbox("確認由單位人員親自領走藥品")
+                st.checkbox("請單位以盤點方式入 ADC，並到 HIS5 進行簽收")
+                st.caption("*(後續由藥庫上班日重新評估增量)*")
 
 
 # ==========================================
